@@ -1,0 +1,2 @@
+rrdesktop is a wrapper around rdesktop which makes rdesktop resizeable
+Example: rrdesktop -uUSERNAME -pPASSWORD HOSTNAME
