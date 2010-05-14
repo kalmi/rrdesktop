@@ -1,2 +1,5 @@
 rrdesktop is a wrapper around rdesktop which makes rdesktop resizeable
-Example: rrdesktop -uUSERNAME -pPASSWORD HOSTNAME
+Example: ./rrdesktop.py -uUSERNAME -pPASSWORD HOSTNAME
+
+It works by restarting your remote desktop session whenever you resize the window.
+It is 100% scrollbar free!
