@@ -3,3 +3,5 @@ Example: ./rrdesktop.py -uUSERNAME -pPASSWORD HOSTNAME
 
 It works by restarting your remote desktop session with the new geometry whenever you resize the window.
 It is 100% scrollbar free!
+
+You need to have python-xlib installed!
