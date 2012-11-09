@@ -8,6 +8,32 @@ from Xlib import X, display, Xutil
 
 class Window:
   def __init__(self, display):
+    title='rrdesktop'
+    userpresent=0;
+    passwordpresent=0;      
+    rev = list(reversed(sys.argv[1:]))
+    for i in reversed(range(len(rev))):
+      if rev[i].startswith("-u"):
+        userpresent=1
+      elif rev[i].startswith("-p"):
+        passwordpresent=1
+      elif (rev[i].startswith("-X") or rev[i].startswith("-g")):
+        if len(rev.pop(i)) == 2:
+          rev.pop(i-1)
+        print>>sys.stderr, "Some arguments ignored by rrdesktop"
+      elif rev[i].startswith("-T"):
+        opt = rev.pop(i)
+        if len(opt) == 2:
+          title = rev.pop(i-1)
+        else:
+          title = opt[2:]
+
+    self.args=list(reversed(rev))
+    
+    if not (userpresent and passwordpresent):
+      print>>sys.stderr, "You must provide username and password on the command line for rrdestop to work! (-u username -p password)"
+      os._exit(1)
+      
     self.display = display
     self.screen = self.display.screen()
     self.window = self.screen.root.create_window(
@@ -25,7 +51,7 @@ class Window:
     self.WM_DELETE_WINDOW = self.display.intern_atom('WM_DELETE_WINDOW')
     self.WM_PROTOCOLS = self.display.intern_atom('WM_PROTOCOLS')
 
-    self.window.set_wm_name('rrdesktop')
+    self.window.set_wm_name(title)
     self.window.set_wm_icon_name('rrdesktop')
     self.window.set_wm_class('rrdesktop', 'rrdesktop')
 
@@ -34,13 +60,13 @@ class Window:
       flags=Xutil.StateHint,
       initial_state=Xutil.NormalState
       )
-			
+      
     # Map the window, making it visible
     self.window.map()
 
   # Main loop
   def loop(self):
-    with Rdesktop(800, 600, self.window.id) as rdesktop:      
+    with Rdesktop(800, 600, self.window.id, self.args) as rdesktop:      
       while True:
         e = self.display.next_event()
 
@@ -58,7 +84,8 @@ class Window:
               
 
 class Rdesktop(threading.Thread):
-  def __init__(self, start_width, start_height, target_wid):    
+  def __init__(self, start_width, start_height, target_wid, args):
+    self.args = args
     self.resize_queue = Queue()    
     self.resize_queue.put([start_width, start_height])
     self._process = None
@@ -94,28 +121,10 @@ class Rdesktop(threading.Thread):
       #Kill rdesktop and start it again      
       self._killRdesktop()
       
-      userpresent=0;
-      passwordpresent=0;      
-      rev = list(reversed(sys.argv[1:]))
-      for i in reversed(range(len(rev))):
-        if rev[i].startswith("-u"):
-          userpresent=1
-        elif rev[i].startswith("-p"):
-          passwordpresent=1
-        elif (rev[i].startswith("-X") or rev[i].startswith("-g")):
-          if len(rev.pop(i)) == 2:
-            rev.pop(i-1)
-          print>>sys.stderr, "Some arguments ignored by rrdesktop"
-      arg=list(reversed(rev))
-      
-      if not (userpresent and passwordpresent):
-        print>>sys.stderr, "You must provide username and password on the command line for rrdestop to work! (-u username -p password)"
-        os._exit(1)
-      
       cmd = ["rdesktop"]+[
         "-X"+str(self._target_wid),
         "-g"+str(width)+"x"+str(height),
-        ]+arg
+        ]+self.args
         
       self._process = Popen(cmd, close_fds=True)
       self._watcher.attachToProcess(self._process)
